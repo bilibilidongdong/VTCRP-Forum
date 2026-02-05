@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VTCRP 论坛 - 主页</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { 
+      background: #1a1a1a; 
+      color: #fff; 
+      min-height: 100vh; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    .card { 
+      background: #242424; 
+      border-radius: 12px; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+      margin-bottom: 1rem;
+    }
+    .btn-primary { 
+      background: #1d9bf0; 
+      transition: background 0.2s; 
+    }
+    .btn-primary:hover { 
+      background: #1a8cd8; 
+    }
+    .input-box { 
+      background: #333; 
+      border: 1px solid #444; 
+      border-radius: 8px; 
+      padding: 12px; 
+      color: #fff;
+    }
+    .input-box:focus { 
+      outline: 2px solid #1d9bf0; 
+      border-color: transparent; 
+    }
+    .verified-badge {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #1d9bf0;
+      color: #fff;
+      font-size: 10px;
+      line-height: 16px;
+      text-align: center;
+      margin-left: 4px;
+      font-weight: bold;
+      vertical-align: middle;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .verified-badge.mini {
+      width: 12px;
+      height: 12px;
+      font-size: 8px;
+      line-height: 12px;
+      margin-left: 2px;
+    }
+    .post-card {
+      border-bottom: 1px solid #333;
+      padding: 1rem 0;
+    }
+    .post-card:last-child {
+      border-bottom: none;
+    }
+    .avatar-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #444;
+    }
+    .comment-container {
+      margin-left: 2rem;
+      margin-top: 0.5rem;
+    }
+    .comment-card {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .avatar-clickable {
+      cursor: pointer;
+    }
+    .avatar-clickable:hover {
+      opacity: 0.9;
+    }
+    .search-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .search-input {
+      flex: 1;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .search-input:focus {
+      outline: 2px solid #1d9bf0;
+      border-color: transparent;
+    }
+    .search-btn {
+      padding: 0 16px;
+      background: #1d9bf0;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-btn:hover {
+      background: #1a8cd8;
+    }
+    .empty-tip, .loading-tip {
+      text-align: center;
+      color: #9ca3af;
+      padding: 2rem 0;
+      font-size: 0.95rem;
+    }
+    .loading-tip {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .search-group {
+        flex-direction: column;
+      }
+      .search-btn {
+        padding: 10px 16px;
+        width: 100%;
+      }
+    }
+    .image-upload-area {
+      margin: 1rem 0;
+    }
+    .image-upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #8899a6;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .image-upload-btn:hover {
+      background: #444;
+      color: #fff;
+    }
+    .image-preview-container {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .image-preview-item {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #444;
+    }
+    .image-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-preview-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 18px;
+      height: 18px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .post-image {
+      margin: 0.8rem 0;
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 400px;
+    }
+    .post-image img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    .delete-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #8899a6;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .delete-btn:hover {
+      background: rgba(224, 36, 94, 0.1);
+      color: #e0245e;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-4xl mx-auto">
+    <header class="flex justify-between items-center mb-8">
+      <div class="flex items-center">
+        <h1 class="text-2xl md:text-3xl font-bold">VTCRP 论坛</h1>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div id="userInfo" class="flex items-center space-x-2 hidden">
+          <img id="userAvatar" src="" alt="用户头像" class="w-8 h-8 rounded-full object-cover avatar-clickable">
+          <span id="userName" class="text-sm"></span>
+          <button id="logoutBtn" class="text-gray-400 hover:text-red-400 text-sm">登出</button>
+        </div>
+        <div id="notLogin" class="flex space-x-2">
+          <a href="/login.html" class="px-4 py-2 rounded-lg btn-primary text-white text-sm">登录</a>
+          <a href="/register.html" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600">注册</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="md:col-span-1">
+        <div class="card p-6 sticky top-4">
+          <h2 class="text-xl font-bold mb-4">发布新帖子</h2>
+          <form id="postForm" class="space-y-4">
+            <textarea 
+              name="content" 
+              class="w-full input-box h-32 resize-none" 
+              placeholder="分享你的RP日常、服务器动态..." 
+              required
+            ></textarea>
+            <div class="image-upload-area">
+              <label class="image-upload-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                  <path d="M2.146 5.146a.5.5 0 0 1 .708 0L4 6.293l1.854-1.853a.5.5 0 0 1 .708.708L4.707 7l1.853 1.854a.5.5 0 0 1-.708.708L4 7.707l-1.854 1.853a.5.5 0 0 1-.708-.708L3.293 7 1.44 5.146a.5.5 0 0 1 0-.708z"/>
+                  <path d="M10 12.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+                <span>添加图片</span>
+                <input type="file" id="postImageInput" accept="image/*" class="hidden" multiple>
+              </label>
+              <div id="imagePreviewContainer" class="image-preview-container hidden"></div>
+            </div>
+            <button type="submit" class="w-full py-2 rounded-lg btn-primary text-white font-medium">发布帖子</button>
+          </form>
+          <div id="postMsg" class="mt-3 p-2 rounded-lg hidden text-sm"></div>
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <div class="card p-6">
+          <h2 class="text-xl font-bold mb-4">最新动态</h2>
+          <div class="search-group">
+            <input type="text" id="postSearchInput" class="search-input" placeholder="搜索帖子内容...">
+            <button type="button" id="postSearchBtn" class="search-btn">搜索</button>
+          </div>
+          <div id="postsLoading" class="loading-tip">搜索中，请稍候...</div>
+          <div id="postsContainer" class="space-y-4">
+            <div class="empty-tip" id="postsEmptyTip">暂无帖子，快来发布第一条动态吧！</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const userInfo = JSON.parse(localStorage.getItem('vtcrp_user')) || null;
+    const postsContainer = document.getElementById('postsContainer');
+    const postsEmptyTip = document.getElementById('postsEmptyTip');
+    const postsLoading = document.getElementById('postsLoading');
+    const postSearchInput = document.getElementById('postSearchInput');
+    const postSearchBtn = document.getElementById('postSearchBtn');
+    const postForm = document.getElementById('postForm');
+    const postMsg = document.getElementById('postMsg');
+    const userAvatarEl = document.getElementById('userAvatar');
+    const userNameEl = document.getElementById('userName');
+    const userInfoEl = document.getElementById('userInfo');
+    const notLoginEl = document.getElementById('notLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const postImageInput = document.getElementById('postImageInput');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    let selectedImages = [];
+
+    const debounce = (fn, delay = 300) => {
+      let timer = null;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          fn.apply(this, args);
+        }, delay);
+      };
+    };
+
+    window.onload = async () => {
+      await checkLoginStatus();
+      await loadPosts();
+      bindEvents();
+    };
+
+    async function checkLoginStatus() {
+      if (!userInfo) {
+        userInfoEl.classList.add('hidden');
+        notLoginEl.classList.remove('hidden');
+        postForm.querySelector('textarea').disabled = true;
+        postForm.querySelector('button').disabled = true;
+        postForm.querySelector('button').textContent = '请登录后发帖';
+        postForm.querySelector('button').className = 'w-full py-2 rounded-lg bg-gray-600 text-white font-medium cursor-not-allowed';
+        postImageInput.disabled = true;
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/user/current', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const result = await res.json();
+
+        if (!result.success) {
+          localStorage.removeItem('vtcrp_user');
+          userInfoEl.classList.add('hidden');
+          notLoginEl.classList.remove('hidden');
+          postForm.querySelector('textarea').disabled = true;
+          postForm.querySelector('button').disabled = true;
+          postImageInput.disabled = true;
+          return;
+        }
+
+        showUserInfo(result.data);
+      } catch (err) {
+        alert('网络错误，请刷新页面重试！');
+      }
+    }
+
+    async function loadPosts(keyword = '') {
+      postsLoading.style.display = 'block';
+      postsEmptyTip.style.display = 'none';
+      postsContainer.innerHTML = '';
+
+      try {
+        let res;
+        if (keyword.trim()) {
+          res = await fetch(`/api/posts/search?keyword=${encodeURIComponent(keyword.trim())}`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+        } else {
+          res = await fetch('/api/posts', {
+            method: 'GET',
+            credentials: 'include'
+          });
+        }
+
+        const result = await res.json();
+        postsLoading.style.display = 'none';
+
+        if (!result.success) {
+          postsEmptyTip.textContent = result.msg || '加载失败，请刷新页面重试！';
+          postsEmptyTip.style.display = 'block';
+          return;
+        }
+
+        const posts = result.data;
+        if (posts.length === 0) {
+          postsEmptyTip.textContent = keyword.trim() ? '暂无匹配的帖子，请更换关键词重试！' : '暂无帖子，快来发布第一条动态吧！';
+          postsEmptyTip.style.display = 'block';
+          return;
+        }
+
+        postsEmptyTip.style.display = 'none';
+        renderPosts(posts);
+      } catch (err) {
+        postsLoading.style.display = 'none';
+        postsEmptyTip.textContent = '网络异常，加载失败，请刷新页面重试！';
+        postsEmptyTip.style.display = 'block';
+      }
+    }
+
+    function renderPosts(posts) {
+      postsContainer.innerHTML = '';
+
+      posts.forEach(post => {
+        const postEl = document.createElement('div');
+        postEl.className = 'post-card';
+        postEl.setAttribute('data-post-id', post.id);
+
+        const isLiked = userInfo && post.likedBy.includes(userInfo.id);
+        const likeColor = isLiked ? 'text-red-400' : 'text-gray-400';
+        const isOwnPost = userInfo && post.userId === userInfo.id;
+
+        postEl.innerHTML = `
+          <div class="flex space-x-3">
+            <img src="${post.userAvatar || '/assets/avatars/default.png'}" alt="${post.username}" class="avatar-circle avatar-clickable" data-user-id="${post.userId}">
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center">
+                  <span class="font-medium">${post.username}</span>
+                  ${post.userIsVerified ? '<span class="verified-badge">✓</span>' : ''}
+                  <span class="text-gray-400 text-xs ml-2">${formatTime(post.createdAt)}</span>
+                </div>
+                ${isOwnPost ? `
+                  <button class="delete-post-btn delete-btn" data-post-id="${post.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                    </svg>
+                    <span>删除</span>
+                  </button>
+                ` : ''}
+              </div>
+              <div class="text-gray-200 mb-2">${post.content}</div>
+              ${post.images && post.images.length > 0 ? `
+                <div class="post-image">
+                  <img src="${post.images[0]}" alt="帖子图片" loading="lazy">
+                </div>
+              ` : ''}
+              <div class="flex space-x-4">
+                <button class="like-btn flex items-center space-x-1 ${likeColor} hover:text-red-400" data-post-id="${post.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                  </svg>
+                  <span class="like-count">${post.likes}</span>
+                </button>
+                <button class="comment-btn flex items-center space-x-1 text-gray-400 hover:text-blue-400" data-post-id="${post.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15c4.418 0 8-3.418 8-8s-3.582-8-8-8-8 3.418-8 8 3.582 8 8 8zm0-1a7 7 0 1 0 0-14 7 7 0 0 0 0 14zm-1.5-8.507c0-.246.207-.447.458-.447.252 0 .448.202.448.447v1.526l3.292 1.974c.25.149.548-.066.548-.314v-4.243c0-.247-.202-.447-.448-.447-.25 0-.45.202-.45.447v1.272L7.498 5.993z"/>
+                  </svg>
+                  <span>评论</span>
+                </button>
+              </div>
+              <div class="comment-container hidden" id="commentArea-${post.id}">
+                <form class="comment-form mt-3 mb-2" data-post-id="${post.id}">
+                  <textarea class="input-box w-full h-16 resize-none text-sm" placeholder="写下你的评论..." required></textarea>
+                  <button type="submit" class="mt-1 px-3 py-1 rounded-lg btn-primary text-white text-sm">发送</button>
+                </form>
+                <div class="comments-list" id="commentsList-${post.id}">
+                  ${post.comments.length > 0 
+                    ? post.comments.map(comment => {
+                        const isOwnComment = userInfo && comment.userId === userInfo.id;
+                        return `
+                          <div class="comment-card">
+                            <div class="flex space-x-2 mb-1 justify-between">
+                              <div class="flex items-center">
+                                <img src="${comment.userAvatar || '/assets/avatars/default.png'}" alt="${comment.username}" class="w-6 h-6 rounded-full avatar-clickable" data-user-id="${comment.userId}">
+                                <div class="flex items-center ml-1">
+                                  <span class="font-medium text-sm">${comment.username}</span>
+                                  ${comment.userIsVerified ? '<span class="verified-badge mini">✓</span>' : ''}
+                                  <span class="text-gray-400 text-xs ml-1">${formatTime(comment.createdAt)}</span>
+                                </div>
+                              </div>
+                              ${isOwnComment ? `
+                                <button class="delete-comment-btn delete-btn" data-post-id="${post.id}" data-comment-id="${comment.id}">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                                  </svg>
+                                </button>
+                              ` : ''}
+                            </div>
+                            <div class="text-gray-300 text-sm">${comment.content}</div>
+                          </div>
+                        `;
+                      }).join('')
+                    : '<div class="text-gray-400 text-sm">暂无评论</div>'
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        postsContainer.appendChild(postEl);
+      });
+    }
+
+    async function createPost(content, images) {
+      try {
+        const formData = new FormData();
+        formData.append('content', content);
+        if (images && images.length > 0) {
+          images.forEach((image, index) => {
+            formData.append(`images[${index}]`, image);
+          });
+        }
+
+        const res = await fetch('/api/posts/create', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+
+        const result = await res.json();
+        if (!result.success) {
+          showMsg(postMsg, result.msg, false);
+          return false;
+        }
+
+        postForm.reset();
+        selectedImages = [];
+        imagePreviewContainer.innerHTML = '';
+        imagePreviewContainer.classList.add('hidden');
+        showMsg(postMsg, '帖子发布成功！', true);
+        await loadPosts();
+        setTimeout(() => postMsg.classList.add('hidden'), 3000);
+        return true;
+      } catch (err) {
+        showMsg(postMsg, '发布失败，请重试！', false);
+        return false;
+      }
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('确定要删除该帖子吗？此操作不可恢复！')) return;
+
+      try {
+        const res = await fetch('/api/posts/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId })
+        });
+
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+
+        alert('帖子删除成功！');
+        await loadPosts(postSearchInput.value.trim());
+        return true;
+      } catch (err) {
+        alert('删除失败，请重试！');
+        return false;
+      }
+    }
+
+    async function deleteComment(postId, commentId) {
+      if (!confirm('确定要删除该评论吗？此操作不可恢复！')) return;
+
+      try {
+        const res = await fetch('/api/comments/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId, commentId })
+        });
+
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+
+        const commentEl = document.querySelector(`.delete-comment-btn[data-comment-id="${commentId}"]`).closest('.comment-card');
+        if (commentEl) commentEl.remove();
+        
+        const commentsList = document.getElementById(`commentsList-${postId}`);
+        if (commentsList.children.length === 0) {
+          commentsList.innerHTML = '<div class="text-gray-400 text-sm">暂无评论</div>';
+        }
+
+        alert('评论删除成功！');
+        return true;
+      } catch (err) {
+        alert('删除失败，请重试！');
+        return false;
+      }
+    }
+
+    async function toggleLike(postId) {
+      if (!userInfo) {
+        alert('请先登录后再点赞！');
+        window.location.href = '/login.html';
+        return false;
+      }
+
+      try {
+        const res = await fetch('/api/posts/like', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId })
+        });
+
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+
+        const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+        const likeCountEl = likeBtn.querySelector('.like-count');
+        likeCountEl.textContent = result.data.likes;
+        
+        likeBtn.className = `like-btn flex items-center space-x-1 ${result.data.liked ? 'text-red-400' : 'text-gray-400'} hover:text-red-400`;
+        return true;
+      } catch (err) {
+        alert('点赞失败，请重试！');
+        return false;
+      }
+    }
+
+    async function createComment(postId, content) {
+      if (!userInfo) {
+        alert('请先登录后再评论！');
+        window.location.href = '/login.html';
+        return false;
+      }
+
+      try {
+        const res = await fetch('/api/posts/comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId, content })
+        });
+
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+
+        const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
+        commentForm.reset();
+        
+        const commentsListEl = document.getElementById(`commentsList-${postId}`);
+        if (commentsListEl.querySelector('.text-gray-400')) {
+          commentsListEl.innerHTML = '';
+        }
+        const newComment = result.data;
+        const isOwnComment = userInfo && newComment.userId === userInfo.id;
+        const commentEl = document.createElement('div');
+        commentEl.className = 'comment-card';
+        commentEl.innerHTML = `
+          <div class="flex space-x-2 mb-1 justify-between">
+            <div class="flex items-center">
+              <img src="${newComment.userAvatar || '/assets/avatars/default.png'}" alt="${newComment.username}" class="w-6 h-6 rounded-full avatar-clickable" data-user-id="${newComment.userId}">
+              <div class="flex items-center ml-1">
+                <span class="font-medium text-sm">${newComment.username}</span>
+                ${newComment.userIsVerified ? '<span class="verified-badge mini">✓</span>' : ''}
+                <span class="text-gray-400 text-xs ml-1">刚刚</span>
+              </div>
+            </div>
+            ${isOwnComment ? `
+              <button class="delete-comment-btn delete-btn" data-post-id="${postId}" data-comment-id="${newComment.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                </svg>
+              </button>
+            ` : ''}
+          </div>
+          <div class="text-gray-300 text-sm">${newComment.content}</div>
+        `;
+        commentsListEl.appendChild(commentEl);
+        return true;
+      } catch (err) {
+        alert('评论失败，请重试！');
+        return false;
+      }
+    }
+
+    function previewImages(files) {
+      if (!files || files.length === 0) return;
+      
+      imagePreviewContainer.innerHTML = '';
+      imagePreviewContainer.classList.remove('hidden');
+      selectedImages = Array.from(files);
+
+      selectedImages.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const previewItem = document.createElement('div');
+          previewItem.className = 'image-preview-item';
+          previewItem.innerHTML = `
+            <img src="${e.target.result}" alt="预览图片${index+1}">
+            <div class="image-preview-remove" data-index="${index}">×</div>
+          `;
+          imagePreviewContainer.appendChild(previewItem);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removePreviewImage(index) {
+      selectedImages.splice(index, 1);
+      if (selectedImages.length > 0) {
+        previewImages(selectedImages);
+      } else {
+        imagePreviewContainer.innerHTML = '';
+        imagePreviewContainer.classList.add('hidden');
+      }
+    }
+
+    function showUserInfo(user) {
+      userInfoEl.classList.remove('hidden');
+      notLoginEl.classList.add('hidden');
+      userAvatarEl.src = user.avatar || '/assets/avatars/default.png';
+      userNameEl.innerHTML = `${user.username} ${user.isVerified ? '<span class="verified-badge">✓</span>' : ''}`;
+      userAvatarEl.onclick = () => window.location.href = `/profile.html?userId=${user.id}`;
+      localStorage.setItem('vtcrp_user', JSON.stringify(user));
+    }
+
+    function formatTime(timeStr) {
+      const now = new Date();
+      const postTime = new Date(timeStr);
+      const diff = now - postTime;
+
+      const second = 1000;
+      const minute = second * 60;
+      const hour = minute * 60;
+      const day = hour * 24;
+
+      if (diff < minute) return '刚刚';
+      if (diff < hour) return `${Math.floor(diff / minute)}分钟前`;
+      if (diff < day) return `${Math.floor(diff / hour)}小时前`;
+      return postTime.toLocaleDateString();
+    }
+
+    function showMsg(el, msg, isSuccess) {
+      el.textContent = msg;
+      el.className = `mt-3 p-2 rounded-lg text-sm ${isSuccess ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`;
+      el.classList.remove('hidden');
+    }
+
+    async function logout() {
+      try {
+        const res = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const result = await res.json();
+      } catch (err) {}
+      localStorage.removeItem('vtcrp_user');
+      window.location.href = '/login.html';
+      alert('登出成功！');
+    }
+
+    function bindEvents() {
+      postForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!userInfo) {
+          alert('请先登录后再发帖！');
+          window.location.href = '/login.html';
+          return;
+        }
+        const content = postForm.content.value.trim();
+        if (!content) {
+          showMsg(postMsg, '帖子内容不能为空！', false);
+          return;
+        }
+        await createPost(content, selectedImages);
+      });
+
+      postImageInput.addEventListener('change', (e) => {
+        previewImages(e.target.files);
+      });
+
+      imagePreviewContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.image-preview-remove')) {
+          const removeBtn = e.target.closest('.image-preview-remove');
+          const index = Number(removeBtn.dataset.index);
+          removePreviewImage(index);
+        }
+      });
+
+      const handleSearch = debounce(async () => {
+        const keyword = postSearchInput.value.trim();
+        await loadPosts(keyword);
+      });
+
+      postSearchBtn.addEventListener('click', handleSearch);
+      postSearchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') handleSearch();
+      });
+
+      postsContainer.addEventListener('click', async (e) => {
+        if (e.target.closest('.like-btn')) {
+          const btn = e.target.closest('.like-btn');
+          const postId = Number(btn.dataset.postId);
+          await toggleLike(postId);
+        }
+
+        if (e.target.closest('.comment-btn')) {
+          const btn = e.target.closest('.comment-btn');
+          const postId = Number(btn.dataset.postId);
+          const commentArea = document.getElementById(`commentArea-${postId}`);
+          commentArea.classList.toggle('hidden');
+        }
+
+        if (e.target.closest('.comment-form')) {
+          e.preventDefault();
+          const form = e.target.closest('.comment-form');
+          const postId = Number(form.dataset.postId);
+          const content = form.querySelector('textarea').value.trim();
+          if (!content) {
+            alert('评论内容不能为空！');
+            return;
+          }
+          await createComment(postId, content);
+        }
+
+        if (e.target.closest('.avatar-clickable')) {
+          const avatar = e.target.closest('.avatar-clickable');
+          const userId = avatar.dataset.userId;
+          if (userId) {
+            window.location.href = `/profile.html?userId=${userId}`;
+          }
+        }
+
+        if (e.target.closest('.delete-post-btn')) {
+          const btn = e.target.closest('.delete-post-btn');
+          const postId = Number(btn.dataset.postId);
+          await deletePost(postId);
+        }
+
+        if (e.target.closest('.delete-comment-btn')) {
+          const btn = e.target.closest('.delete-comment-btn');
+          const postId = Number(btn.dataset.postId);
+          const commentId = Number(btn.dataset.commentId);
+          await deleteComment(postId, commentId);
+        }
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        if (confirm('确定要登出吗？')) {
+          await logout();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

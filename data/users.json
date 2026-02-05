@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "username": "VTCRP Official",
+    "password": "$2b$10$9RVNZGOkSE21l5LHX0u0O.38iNLOyx3jlnVuLzYIYhs.7BUUeMuaC",
+    "avatar": "/assets/avatars/1_1770294019425.jpg",
+    "isVerified": true,
+    "isAdmin": true,
+    "tags": [
+      "官方",
+      "VTCRP",
+      "Roleplay",
+      "TangCounty"
+    ],
+    "createdAt": "2026-02-05T11:45:41.882Z"
+  }
+]

@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人资料 - VTCRP 论坛</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 全局样式统一 */
+    body { 
+      background: #1a1a1a; 
+      color: #fff; 
+      min-height: 100vh; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    .card { 
+      background: #242424; 
+      border-radius: 12px; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+      margin-bottom: 1rem;
+    }
+    .btn-primary { 
+      background: #1d9bf0; 
+      transition: background 0.2s; 
+    }
+    .btn-primary:hover { 
+      background: #1a8cd8; 
+    }
+    .input-box { 
+      background: #333; 
+      border: 1px solid #444; 
+      border-radius: 8px; 
+      padding: 12px; 
+      color: #fff;
+    }
+    .input-box:focus { 
+      outline: 2px solid #1d9bf0; 
+      border-color: transparent; 
+    }
+    /* Twitter蓝标样式优化（贴近官方） */
+    .verified-badge {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #1d9bf0;
+      color: #fff;
+      font-size: 10px;
+      line-height: 16px;
+      text-align: center;
+      margin-left: 4px;
+      font-weight: 500;
+      vertical-align: middle;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    /* 标签样式 */
+    .tag-item {
+      background: #1d9bf0/20;
+      color: #1d9bf0;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+      display: inline-block;
+    }
+    /* 头像上传区域 */
+    .avatar-upload-area {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #444;
+      position: relative;
+      cursor: pointer;
+    }
+    .avatar-upload-area:hover .avatar-upload-mask {
+      display: flex;
+    }
+    .avatar-upload-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+    }
+    /* Twitter式帖子卡片样式（贴近Twitter推文） */
+    .post-card {
+      border-bottom: 1px solid #333;
+      padding: 1rem 0;
+      transition: background 0.1s;
+    }
+    .post-card:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    .post-card:last-child {
+      border-bottom: none;
+    }
+    /* Twitter式按钮通用样式 */
+    .twitter-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #8899a6;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+      padding: 4px 8px;
+      border-radius: 9999px;
+    }
+    .twitter-btn:hover {
+      background: rgba(29, 155, 240, 0.1);
+      color: #1d9bf0;
+    }
+    .twitter-btn.like:hover {
+      background: rgba(224, 36, 94, 0.1);
+      color: #e0245e;
+    }
+    .twitter-btn.retweet:hover {
+      background: rgba(23, 151, 100, 0.1);
+      color: #179764;
+    }
+    /* 空提示/加载提示 */
+    .empty-tip, .loading-tip {
+      text-align: center;
+      color: #9ca3af;
+      padding: 2rem 0;
+      font-size: 0.95rem;
+    }
+    .loading-tip {
+      display: none;
+    }
+    /* Twitter式@用户名样式（灰色、小写） */
+    .at-username {
+      color: #8899a6;
+      font-size: 0.85rem;
+      margin-left: 6px;
+    }
+    /* Twitter式关注按钮样式（贴近Twitter） */
+    .follow-btn {
+      background: #fff;
+      color: #1a1a1a;
+      font-weight: 600;
+      padding: 4px 16px;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 0.85rem;
+    }
+    .follow-btn:hover {
+      background: #e6e6e6;
+    }
+    .follow-btn.following {
+      background: transparent;
+      color: #fff;
+      border: 1px solid #fff;
+    }
+    .follow-btn.following:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+      .profile-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .avatar-upload-area {
+        width: 80px;
+        height: 80px;
+      }
+    }
+    /* 新增：图片上传/预览/展示样式（与index.html完全统一） */
+    .image-upload-area {
+      margin: 0.8rem 0;
+    }
+    .image-upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #8899a6;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .image-upload-btn:hover {
+      background: #444;
+      color: #fff;
+    }
+    .image-preview-container {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .image-preview-item {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #444;
+    }
+    .image-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-preview-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    /* 帖子/评论图片展示样式 */
+    .post-image, .comment-image {
+      margin: 0.8rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+      max-height: 300px;
+    }
+    .post-image img, .comment-image img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    .comment-image {
+      max-height: 150px;
+      margin: 0.5rem 0;
+    }
+    /* 新增：删除按钮样式（与index.html统一的Twitter风格） */
+    .delete-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #8899a6;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .delete-btn:hover {
+      background: rgba(224, 36, 94, 0.1);
+      color: #e0245e;
+    }
+    /* 评论区适配样式 */
+    .comment-container {
+      margin-top: 0.8rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid #333;
+    }
+    .comment-card {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.6rem;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- 顶部导航栏 -->
+    <header class="flex justify-between items-center mb-8">
+      <div class="flex items-center">
+        <h1 class="text-2xl md:text-3xl font-bold">VTCRP 论坛</h1>
+        <span class="text-gray-400 text-sm ml-2">个人资料</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <!-- 登录用户信息 -->
+        <div id="userInfo" class="flex items-center space-x-2 hidden">
+          <img id="currentUserAvatar" src="" alt="当前用户头像" class="w-8 h-8 rounded-full object-cover">
+          <span id="currentUserName" class="text-sm"></span>
+          <button id="logoutBtn" class="text-gray-400 hover:text-red-400 text-sm">登出</button>
+        </div>
+        <!-- 未登录提示 -->
+        <div id="notLogin" class="flex space-x-2">
+          <a href="/login.html" class="px-4 py-2 rounded-lg btn-primary text-white text-sm">登录</a>
+          <a href="/register.html" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600">注册</a>
+        </div>
+        <!-- 返回主页按钮 -->
+        <a href="/index.html" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600">返回主页</a>
+      </div>
+    </header>
+
+    <!-- 个人资料主体 -->
+    <div class="profile-grid grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 左侧：用户基础信息 -->
+      <div class="md:col-span-1">
+        <div class="card p-6 sticky top-4">
+          <!-- 头像区域 -->
+          <div class="flex flex-col items-center mb-6">
+            <div class="avatar-upload-area mb-3" id="avatarUploadArea">
+              <img id="targetUserAvatar" src="/assets/avatars/default.png" alt="用户头像" class="w-full h-full object-cover">
+              <div class="avatar-upload-mask" id="avatarUploadMask">
+                <span>更换头像</span>
+              </div>
+              <input type="file" id="avatarFileInput" accept="image/*" class="hidden">
+            </div>
+            <!-- 用户名+ Twitter式@用户名 -->
+            <div class="flex items-center mb-1">
+              <h2 id="targetUserName" class="text-xl font-bold"></h2>
+              <span id="targetUserVerified" class="verified-badge hidden">✓</span>
+            </div>
+            <span id="targetUserAt" class="at-username">@loading...</span>
+            <!-- Twitter式关注按钮（仅他人资料页显示） -->
+            <button id="followBtn" class="follow-btn hidden mt-3">关注</button>
+            <!-- 编辑用户名按钮（仅自己可见） -->
+            <button id="editUsernameBtn" class="mt-2 px-3 py-1 rounded-lg btn-primary text-white text-sm hidden">
+              修改用户名
+            </button>
+            <!-- 标签列表 -->
+            <div class="flex flex-wrap mt-4 justify-center">
+              <div id="tagList">
+                <!-- 标签动态渲染 -->
+              </div>
+              <div id="noTags" class="text-gray-400 text-sm">暂无标签</div>
+            </div>
+          </div>
+
+          <!-- 用户名编辑表单（默认隐藏） -->
+          <div id="usernameEditForm" class="space-y-3 hidden">
+            <input type="text" id="newUsernameInput" class="input-box w-full" placeholder="输入新用户名">
+            <!-- Twitter式@用户名提示 -->
+            <p class="text-xs text-gray-400">@用户名会自动生成（小写，与用户名一致），不可单独修改</p>
+            <div class="flex space-x-2">
+              <button id="saveUsernameBtn" class="flex-1 py-1 rounded-lg btn-primary text-white text-sm">保存</button>
+              <button id="cancelUsernameBtn" class="flex-1 py-1 rounded-lg bg-gray-700 text-white text-sm">取消</button>
+            </div>
+            <div id="usernameMsg" class="p-2 rounded-lg text-sm hidden"></div>
+          </div>
+
+          <!-- 头像上传提示 -->
+          <div id="avatarMsg" class="p-2 rounded-lg text-sm hidden text-center"></div>
+        </div>
+      </div>
+
+      <!-- 右侧：用户发布的帖子 + 新增评论图片上传 -->
+      <div class="md:col-span-2">
+        <div class="card p-6">
+          <h2 class="text-xl font-bold mb-4">我的帖子</h2>
+          <!-- 加载提示 -->
+          <div id="postsLoading" class="loading-tip">加载中，请稍候...</div>
+          <!-- 帖子列表容器 -->
+          <div id="userPostsContainer" class="space-y-4">
+            <div class="empty-tip" id="postsEmptyTip">暂无发布的帖子</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===================== 全局变量 =====================
+    let currentUser = JSON.parse(localStorage.getItem('vtcrp_user')) || null;
+    // 修复：获取URL中的userId，无参/错参则默认当前用户ID
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetUserId = Number(urlParams.get('userId'));
+    if (!targetUserId || isNaN(targetUserId)) {
+      targetUserId = currentUser ? currentUser.id : null;
+    }
+    // DOM元素
+    const avatarUploadArea = document.getElementById('avatarUploadArea');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    const avatarUploadMask = document.getElementById('avatarUploadMask');
+    const targetUserAvatar = document.getElementById('targetUserAvatar');
+    const targetUserName = document.getElementById('targetUserName');
+    const targetUserVerified = document.getElementById('targetUserVerified');
+    const targetUserAt = document.getElementById('targetUserAt');
+    const followBtn = document.getElementById('followBtn');
+    const tagList = document.getElementById('tagList');
+    const noTags = document.getElementById('noTags');
+    const editUsernameBtn = document.getElementById('editUsernameBtn');
+    const usernameEditForm = document.getElementById('usernameEditForm');
+    const newUsernameInput = document.getElementById('newUsernameInput');
+    const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+    const cancelUsernameBtn = document.getElementById('cancelUsernameBtn');
+    const usernameMsg = document.getElementById('usernameMsg');
+    const avatarMsg = document.getElementById('avatarMsg');
+    const userPostsContainer = document.getElementById('userPostsContainer');
+    const postsEmptyTip = document.getElementById('postsEmptyTip');
+    const postsLoading = document.getElementById('postsLoading');
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
+    const currentUserName = document.getElementById('currentUserName');
+    const userInfo = document.getElementById('userInfo');
+    const notLoginEl = document.getElementById('notLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    // 新增：图片上传相关全局变量（评论用）
+    let commentImageMap = new Map(); // 存储每个帖子的评论选中图片：postId => [files]
+
+    // ===================== 页面加载初始化 =====================
+    window.onload = async () => {
+      // 未登录直接跳转登录页（友好提示）
+      if (!currentUser) {
+        alert('请先登录后再访问个人资料！');
+        window.location.href = '/login.html';
+        return;
+      }
+      // 后端校验Session（失败则清除本地存储，跳转登录）
+      const isLoginValid = await checkLoginStatus();
+      if (!isLoginValid) return;
+      // 如果targetUserId仍为空，强制跳转到自己的资料页
+      if (!targetUserId) {
+        window.location.href = `/profile.html?userId=${currentUser.id}`;
+        return;
+      }
+      // 加载目标用户信息+帖子
+      await loadTargetUserInfo();
+      await loadUserPosts();
+      // 绑定事件（含图片上传、删除功能）
+      bindEvents();
+    };
+
+    // ===================== 核心函数 =====================
+    /**
+     * 校验登录态（后端）- 简化逻辑，失败直接跳转
+     * @returns {boolean} 是否有效
+     */
+    async function checkLoginStatus() {
+      try {
+        const res = await fetch('/api/user/current', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const result = await res.json();
+        if (!result.success) {
+          localStorage.removeItem('vtcrp_user');
+          alert('登录态已失效，请重新登录！');
+          window.location.href = '/login.html';
+          return false;
+        }
+        // 更新本地存储的用户信息（同步后端）
+        currentUser = result.data;
+        localStorage.setItem('vtcrp_user', JSON.stringify(currentUser));
+        // 展示当前登录用户信息
+        currentUserAvatar.src = currentUser.avatar || '/assets/avatars/default.png';
+        currentUserName.textContent = currentUser.username;
+        userInfo.classList.remove('hidden');
+        notLoginEl.classList.add('hidden');
+        return true;
+      } catch (err) {
+        alert('网络错误，请刷新页面重试！');
+        return false;
+      }
+    }
+
+    /**
+     * 加载目标用户信息 - 简化接口请求，保证必返回数据
+     */
+    async function loadTargetUserInfo() {
+      try {
+        let targetUser = null;
+        // 先尝试获取自己的信息（所有用户都有权限）
+        const selfRes = await fetch('/api/user/current', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const selfResult = await selfRes.json();
+        // 如果是自己的资料页，直接用自身信息
+        if (selfResult.success && selfResult.data.id === targetUserId) {
+          targetUser = selfResult.data;
+        } else {
+          // 不是自己，尝试用管理员接口获取（管理员可看所有，普通用户返回自己）
+          const adminRes = await fetch('/api/admin/users', {
+            method: 'GET',
+            credentials: 'include'
+          });
+          if (adminRes.ok) {
+            const adminResult = await adminRes.json();
+            if (adminResult.success) {
+              targetUser = adminResult.data.find(u => u.id === targetUserId) || selfResult.data;
+            } else {
+              targetUser = selfResult.data;
+            }
+          } else {
+            targetUser = selfResult.data;
+          }
+        }
+
+        // 渲染用户核心信息（必成功）
+        targetUserAvatar.src = targetUser.avatar || '/assets/avatars/default.png';
+        targetUserName.textContent = targetUser.username;
+        targetUserAt.textContent = `@${targetUser.username.toLowerCase()}`;
+        // 蓝标展示
+        if (targetUser.isVerified) {
+          targetUserVerified.classList.remove('hidden');
+        }
+        // 标签渲染
+        if (targetUser.tags && targetUser.tags.length > 0) {
+          tagList.innerHTML = targetUser.tags.map(tag => `<span class="tag-item">${tag}</span>`).join('');
+          noTags.classList.add('hidden');
+        } else {
+          tagList.innerHTML = '';
+          noTags.classList.remove('hidden');
+        }
+
+        // 权限控制：仅自己可编辑头像/用户名
+        if (targetUser.id === currentUser.id) {
+          editUsernameBtn.classList.remove('hidden');
+          avatarUploadMask.style.display = 'none';
+          followBtn.classList.add('hidden'); // 自己不显示关注按钮
+        } else {
+          editUsernameBtn.classList.add('hidden');
+          avatarUploadArea.style.cursor = 'not-allowed'; // 他人资料页不可点击头像
+          followBtn.classList.remove('hidden'); // 显示关注按钮
+          followBtn.textContent = '关注';
+          followBtn.classList.remove('following');
+        }
+      } catch (err) {
+        alert('加载用户信息失败，将为你打开自己的资料页！');
+        window.location.href = `/profile.html?userId=${currentUser.id}`;
+      }
+    }
+
+    /**
+     * 加载目标用户发布的帖子 - 新增图片展示、删除按钮、评论图片上传
+     */
+    async function loadUserPosts() {
+      postsLoading.style.display = 'block';
+      postsEmptyTip.style.display = 'none';
+      userPostsContainer.innerHTML = '';
+
+      try {
+        // 直接获取所有帖子，前端筛选（简单高效）
+        const res = await fetch('/api/posts', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const result = await res.json();
+        postsLoading.style.display = 'none';
+
+        if (!result.success) {
+          postsEmptyTip.textContent = '加载帖子失败，请刷新重试！';
+          postsEmptyTip.style.display = 'block';
+          return;
+        }
+
+        // 筛选目标用户的帖子
+        const userPosts = result.data.filter(post => post.userId === targetUserId);
+        if (userPosts.length === 0) {
+          postsEmptyTip.style.display = 'block';
+          return;
+        }
+
+        // 渲染帖子（Twitter风格 + 图片 + 删除 + 评论图片上传）
+        userPosts.forEach(post => {
+          const isLiked = currentUser && post.likedBy.includes(currentUser.id);
+          const likeColor = isLiked ? 'text-red-400' : '';
+          // 判断是否是自己的帖子（仅自己可删除）
+          const isOwnPost = currentUser && post.userId === currentUser.id;
+          // 初始化该帖子的评论图片存储
+          commentImageMap.set(post.id, []);
+
+          const postEl = document.createElement('div');
+          postEl.className = 'post-card';
+          postEl.innerHTML = `
+            <div class="text-gray-200 mb-2">${post.content}</div>
+            <!-- 新增：帖子图片展示 -->
+            ${post.images && post.images.length > 0 ? `
+              <div class="post-image">
+                <img src="${post.images[0]}" alt="帖子图片" loading="lazy">
+              </div>
+            ` : ''}
+            <!-- 帖子操作栏：点赞/评论/转发 + 新增删除按钮 -->
+            <div class="flex justify-between w-full items-center">
+              <div class="flex gap-6">
+                <button class="twitter-btn like ${likeColor}" data-post-id="${post.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                  </svg>
+                  <span>${post.likes}</span>
+                </button>
+                <button class="twitter-btn comment" data-post-id="${post.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15c4.418 0 8-3.418 8-8s-3.582-8-8-8-8 3.418-8 8 3.582 8 8 8zm0-1a7 7 0 1 0 0-14 7 7 0 0 0 0 14zm-1.5-8.507c0-.246.207-.447.458-.447.252 0 .448.202.448.447v1.526l3.292 1.974c.25.149.548-.066.548-.314v-4.243c0-.247-.202-.447-.448-.447-.25 0-.45.202-.45.447v1.272L7.498 5.993z"/>
+                  </svg>
+                  <span>${post.comments.length}</span>
+                </button>
+                <button class="twitter-btn retweet" data-post-id="${post.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.354 1.528a.678.678 0 0 0-1.354 0l-1.53 4.602a.65.65 0 0 0 .163.604L8 8.692l3.029-1.953a.65.65 0 0 0 .163-.604l-1.53-4.602zM8 0a.83.83 0 0 0-.646.272L1.025 5.85a1.002 1.002 0 0 0 0 1.406l5.323 3.47a.83.83 0 0 0 .708 0l5.323-3.47a1.002 1.002 0 0 0 0-1.406L8.646.272A.83.83 0 0 0 8 0zm0 8.865a.895.895 0 1 0 0 1.79 1.11.11 0 0 1 .088.094c.32.736.903 1.616 1.932 2.003V15h3.293v-1.207c.98-.356 1.553-1.18 1.888-1.932a.89.89 0 0 0-1.222-1.164c-.28.13-.609.203-.936.203-.186 0-.364-.027-.53-.084a1.402 1.402 0 0 0-.762.752L8 13.767l-3.596-2.26a1.402 1.402 0 0 0-.763-.752c-.166-.057-.344-.084-.53-.084-.327 0-.656.073-.936.203a.89.89 0 0 0-1.222 1.164c.335.752.908 1.576 1.888 1.932V15h3.293v-1.207c.98-.356 1.553-1.18 1.932-2.003.026-.01.05-.022.088-.033a.89.89 0 0 0 .033-.948z"/>
+                  </svg>
+                  <span>${post.retweets || 0}</span>
+                </button>
+              </div>
+              <!-- 新增：仅自己的帖子显示删除按钮 -->
+              ${isOwnPost ? `
+                <button class="delete-post-btn delete-btn" data-post-id="${post.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                  </svg>
+                  <span>删除</span>
+                </button>
+              ` : ''}
+            </div>
+            <!-- Twitter式帖子时间 -->
+            <div class="text-xs text-gray-400 mt-2 mb-3">
+              ${formatTime(post.createdAt)} · VTCRP 论坛
+            </div>
+            <!-- 评论区（默认隐藏）+ 新增图片上传 -->
+            <div class="comment-container hidden" id="commentArea-${post.id}">
+              <!-- 评论表单 + 图片上传 -->
+              <form class="comment-form mt-3 mb-3" data-post-id="${post.id}">
+                <textarea class="input-box w-full h-16 resize-none text-sm" placeholder="写下你的评论..." required></textarea>
+                <!-- 新增：评论图片上传 -->
+                <div class="image-upload-area">
+                  <label class="image-upload-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                      <path d="M2.146 5.146a.5.5 0 0 1 .708 0L4 6.293l1.854-1.853a.5.5 0 0 1 .708.708L4.707 7l1.853 1.854a.5.5 0 0 1-.708.708L4 7.707l-1.854 1.853a.5.5 0 0 1-.708-.708L3.293 7 1.44 5.146a.5.5 0 0 1 0-.708z"/>
+                      <path d="M10 12.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    <span>添加图片</span>
+                    <input type="file" class="comment-image-input hidden" accept="image/*" data-post-id="${post.id}">
+                  </label>
+                  <!-- 评论图片预览容器 -->
+                  <div class="image-preview-container hidden" id="commentPreview-${post.id}"></div>
+                </div>
+                <button type="submit" class="mt-2 px-3 py-1 rounded-lg btn-primary text-white text-sm">发送评论</button>
+              </form>
+              <!-- 评论列表 -->
+              <div class="comments-list" id="commentsList-${post.id}">
+                ${post.comments.length > 0 
+                  ? post.comments.map(comment => {
+                      const isOwnComment = currentUser && comment.userId === currentUser.id;
+                      return `
+                        <div class="comment-card">
+                          <div class="flex justify-between items-start mb-1">
+                            <div class="flex items-center">
+                              <span class="font-medium text-sm">${comment.username}</span>
+                              <span class="at-username text-xs">@${comment.username.toLowerCase()}</span>
+                            </div>
+                            <!-- 新增：仅自己的评论显示删除按钮 -->
+                            ${isOwnComment ? `
+                              <button class="delete-comment-btn delete-btn text-xs" data-post-id="${post.id}" data-comment-id="${comment.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                                </svg>
+                              </button>
+                            ` : ''}
+                          </div>
+                          <div class="text-gray-300 text-sm">${comment.content}</div>
+                          <!-- 新增：评论图片展示 -->
+                          ${comment.images && comment.images.length > 0 ? `
+                            <div class="comment-image">
+                              <img src="${comment.images[0]}" alt="评论图片" loading="lazy">
+                            </div>
+                          ` : ''}
+                          <div class="text-xs text-gray-400 mt-1">${formatTime(comment.createdAt)}</div>
+                        </div>
+                      `;
+                    }).join('')
+                  : '<div class="text-gray-400 text-sm">暂无评论，快来抢沙发！</div>'
+                }
+              </div>
+            </div>
+          `;
+          userPostsContainer.appendChild(postEl);
+        });
+      } catch (err) {
+        postsLoading.style.display = 'none';
+        postsEmptyTip.textContent = '网络异常，加载帖子失败！';
+        postsEmptyTip.style.display = 'block';
+      }
+    }
+
+    /**
+     * 上传头像（保留原有功能）
+     */
+    async function uploadAvatar(file) {
+      if (!file) return false;
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showMsg(avatarMsg, '仅支持jpg/png/gif/webp格式！', false);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showMsg(avatarMsg, '头像大小不能超过5MB！', false);
+        return false;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        const res = await fetch('/api/user/avatar', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        const result = await res.json();
+        if (!result.success) {
+          showMsg(avatarMsg, result.msg, false);
+          return false;
+        }
+        // 刷新头像+更新本地存储
+        targetUserAvatar.src = result.data.avatar + '?t=' + Date.now();
+        currentUserAvatar.src = result.data.avatar + '?t=' + Date.now();
+        currentUser.avatar = result.data.avatar;
+        localStorage.setItem('vtcrp_user', JSON.stringify(currentUser));
+        showMsg(avatarMsg, '头像上传成功！', true);
+        setTimeout(() => avatarMsg.classList.add('hidden'), 3000);
+        return true;
+      } catch (err) {
+        showMsg(avatarMsg, '上传失败，请重试！', false);
+        return false;
+      }
+    }
+
+    /**
+     * 修改用户名（保留原有功能）
+     */
+    async function updateUsername(newName) {
+      newName = newName.trim();
+      if (!newName || newName === targetUserName.textContent) {
+        showMsg(usernameMsg, newName ? '新用户名与原用户名一致！' : '用户名不能为空！', false);
+        return false;
+      }
+
+      try {
+        const res = await fetch('/api/user/username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ newUsername: newName })
+        });
+        const result = await res.json();
+        if (!result.success) {
+          showMsg(usernameMsg, result.msg, false);
+          return false;
+        }
+        // 刷新用户名+@用户名+本地存储
+        targetUserName.textContent = newName;
+        targetUserAt.textContent = `@${newName.toLowerCase()}`;
+        currentUserName.textContent = newName;
+        currentUser.username = newName;
+        localStorage.setItem('vtcrp_user', JSON.stringify(currentUser));
+        showMsg(usernameMsg, '用户名修改成功！', true);
+        setTimeout(() => {
+          usernameEditForm.classList.add('hidden');
+          usernameMsg.classList.add('hidden');
+        }, 2000);
+        return true;
+      } catch (err) {
+        showMsg(usernameMsg, '修改失败，请重试！', false);
+        return false;
+      }
+    }
+
+    /**
+     * 关注/取消关注（保留原有功能）
+     */
+    async function toggleFollow() {
+      const isFollowing = followBtn.classList.contains('following');
+      if (isFollowing) {
+        followBtn.textContent = '关注';
+        followBtn.classList.remove('following');
+        showMsg(avatarMsg, '已取消关注', true);
+      } else {
+        followBtn.textContent = '已关注';
+        followBtn.classList.add('following');
+        showMsg(avatarMsg, '关注成功', true);
+      }
+      setTimeout(() => avatarMsg.classList.add('hidden'), 3000);
+    }
+
+    /**
+     * 点赞/取消点赞（保留原有功能）
+     */
+    async function toggleLike(postId) {
+      try {
+        const res = await fetch('/api/posts/like', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId })
+        });
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+        // 更新点赞按钮样式和数量
+        const likeBtn = document.querySelector(`.twitter-btn.like[data-post-id="${postId}"]`);
+        const likeCount = likeBtn.querySelector('span');
+        likeCount.textContent = result.data.likes;
+        if (result.data.liked) {
+          likeBtn.classList.add('text-red-400');
+        } else {
+          likeBtn.classList.remove('text-red-400');
+        }
+        return true;
+      } catch (err) {
+        alert('点赞操作失败，请重试！');
+        return false;
+      }
+    }
+
+    /**
+     * 新增：发布评论（支持图片上传，FormData提交）
+     */
+    async function createComment(postId, content, images) {
+      if (!currentUser) {
+        alert('请先登录后再评论！');
+        window.location.href = '/login.html';
+        return false;
+      }
+      try {
+        const formData = new FormData();
+        formData.append('postId', postId);
+        formData.append('content', content);
+        // 添加评论图片
+        if (images && images.length > 0) {
+          images.forEach((image, index) => {
+            formData.append(`images[${index}]`, image);
+          });
+        }
+        const res = await fetch('/api/posts/comment', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+        // 清空评论表单和图片预览
+        const commentForm = document.querySelector(`.comment-form[data-post-id="${postId}"]`);
+        commentForm.reset();
+        const previewContainer = document.getElementById(`commentPreview-${postId}`);
+        previewContainer.innerHTML = '';
+        previewContainer.classList.add('hidden');
+        commentImageMap.set(postId, []);
+        // 渲染新评论
+        const newComment = result.data;
+        const commentsList = document.getElementById(`commentsList-${postId}`);
+        // 移除暂无评论提示
+        if (commentsList.querySelector('.text-gray-400')) {
+          commentsList.innerHTML = '';
+        }
+        // 构建新评论DOM
+        const isOwnComment = currentUser.id === newComment.userId;
+        const commentEl = document.createElement('div');
+        commentEl.className = 'comment-card';
+        commentEl.innerHTML = `
+          <div class="flex justify-between items-start mb-1">
+            <div class="flex items-center">
+              <span class="font-medium text-sm">${newComment.username}</span>
+              <span class="at-username text-xs">@${newComment.username.toLowerCase()}</span>
+            </div>
+            ${isOwnComment ? `
+              <button class="delete-comment-btn delete-btn text-xs" data-post-id="${postId}" data-comment-id="${newComment.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                </svg>
+              </button>
+            ` : ''}
+          </div>
+          <div class="text-gray-300 text-sm">${newComment.content}</div>
+          ${newComment.images && newComment.images.length > 0 ? `
+            <div class="comment-image">
+              <img src="${newComment.images[0]}" alt="评论图片" loading="lazy">
+            </div>
+          ` : ''}
+          <div class="text-xs text-gray-400 mt-1">刚刚</div>
+        `;
+        commentsList.appendChild(commentEl);
+        // 更新评论数
+        const commentBtn = document.querySelector(`.twitter-btn.comment[data-post-id="${postId}"]`);
+        commentBtn.querySelector('span').textContent = Number(commentBtn.querySelector('span').textContent) + 1;
+        return true;
+      } catch (err) {
+        alert('评论发布失败，请重试！');
+        return false;
+      }
+    }
+
+    /**
+     * 新增：删除帖子（与index.html接口统一）
+     */
+    async function deletePost(postId) {
+      if (!confirm('确定要删除该帖子吗？此操作不可恢复！')) return;
+      try {
+        const res = await fetch('/api/posts/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId })
+        });
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+        alert('帖子删除成功！');
+        await loadUserPosts();
+        return true;
+      } catch (err) {
+        alert('帖子删除失败，请重试！');
+        return false;
+      }
+    }
+
+    /**
+     * 新增：删除评论（与index.html接口统一）
+     */
+    async function deleteComment(postId, commentId) {
+      if (!confirm('确定要删除该评论吗？此操作不可恢复！')) return;
+      try {
+        const res = await fetch('/api/comments/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId, commentId })
+        });
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg);
+          return false;
+        }
+        // 移除评论DOM
+        const commentEl = document.querySelector(`.delete-comment-btn[data-comment-id="${commentId}"]`).closest('.comment-card');
+        if (commentEl) commentEl.remove();
+        // 更新评论数
+        const commentBtn = document.querySelector(`.twitter-btn.comment[data-post-id="${postId}"]`);
+        const newCount = Number(commentBtn.querySelector('span').textContent) - 1;
+        commentBtn.querySelector('span').textContent = newCount < 0 ? 0 : newCount;
+        // 无评论时显示提示
+        const commentsList = document.getElementById(`commentsList-${postId}`);
+        if (commentsList.children.length === 0) {
+          commentsList.innerHTML = '<div class="text-gray-400 text-sm">暂无评论，快来抢沙发！</div>';
+        }
+        alert('评论删除成功！');
+        return true;
+      } catch (err) {
+        alert('评论删除失败，请重试！');
+        return false;
+      }
+    }
+
+    /**
+     * 新增：图片预览（通用，帖子/评论都可用）
+     */
+    function previewImages(files, previewContainer) {
+      if (!files || files.length === 0) return;
+      previewContainer.innerHTML = '';
+      previewContainer.classList.remove('hidden');
+      const imageList = Array.from(files);
+      imageList.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const previewItem = document.createElement('div');
+          previewItem.className = 'image-preview-item';
+          previewItem.innerHTML = `
+            <img src="${e.target.result}" alt="预览图片${index+1}">
+            <div class="image-preview-remove" data-index="${index}">×</div>
+          `;
+          previewContainer.appendChild(previewItem);
+        };
+        reader.readAsDataURL(file);
+      });
+      return imageList;
+    }
+
+    /**
+     * 新增：移除预览图片（通用）
+     */
+    function removePreviewImage(previewContainer, postId) {
+      return (index) => {
+        const images = commentImageMap.get(postId);
+        if (!images) return;
+        images.splice(index, 1);
+        commentImageMap.set(postId, images);
+        // 重新预览
+        if (images.length > 0) {
+          previewImages(images, previewContainer);
+        } else {
+          previewContainer.innerHTML = '';
+          previewContainer.classList.add('hidden');
+        }
+      };
+    }
+
+    /**
+     * 格式化时间（保留原有功能，与index.html统一）
+     */
+    function formatTime(timeStr) {
+      const now = new Date();
+      const postTime = new Date(timeStr);
+      const diff = now - postTime;
+      const minute = 60 * 1000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+      if (diff < minute) return '刚刚';
+      if (diff < hour) return `${Math.floor(diff / minute)}分钟前`;
+      if (diff < day) return `${Math.floor(diff / hour)}小时前`;
+      if (diff < 30 * day) return `${Math.floor(diff / day)}天前`;
+      return postTime.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    }
+
+    /**
+     * 显示提示信息（保留原有功能）
+     */
+    function showMsg(el, msg, isSuccess) {
+      el.textContent = msg;
+      el.className = `p-2 rounded-lg text-sm ${isSuccess ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`;
+      el.classList.remove('hidden');
+    }
+
+    /**
+     * 登出账号（保留原有功能）
+     */
+    async function logout() {
+      try {
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      } catch (err) {}
+      localStorage.removeItem('vtcrp_user');
+      window.location.href = '/login.html';
+      alert('登出成功！');
+    }
+
+    // ===================== 事件绑定（新增图片+删除功能） =====================
+    function bindEvents() {
+      // 1. 头像上传（仅自己可操作）
+      avatarUploadArea.addEventListener('click', () => {
+        if (targetUserId === currentUser.id) avatarFileInput.click();
+      });
+      avatarFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) await uploadAvatar(file);
+      });
+
+      // 2. 用户名修改
+      editUsernameBtn.addEventListener('click', () => {
+        usernameEditForm.classList.remove('hidden');
+        newUsernameInput.value = targetUserName.textContent;
+        newUsernameInput.focus();
+      });
+      cancelUsernameBtn.addEventListener('click', () => {
+        usernameEditForm.classList.add('hidden');
+        usernameMsg.classList.add('hidden');
+      });
+      saveUsernameBtn.addEventListener('click', async () => {
+        await updateUsername(newUsernameInput.value);
+      });
+
+      // 3. 关注/取消关注
+      followBtn.addEventListener('click', toggleFollow);
+
+      // 4. 帖子核心交互：点赞/评论/删除/图片上传（事件委托）
+      userPostsContainer.addEventListener('click', async (e) => {
+        // 点赞/取消点赞
+        if (e.target.closest('.twitter-btn.like')) {
+          const btn = e.target.closest('.twitter-btn.like');
+          const postId = Number(btn.dataset.postId);
+          await toggleLike(postId);
+        }
+        // 展开/收起评论区
+        if (e.target.closest('.twitter-btn.comment')) {
+          const btn = e.target.closest('.twitter-btn.comment');
+          const postId = Number(btn.dataset.postId);
+          const commentArea = document.getElementById(`commentArea-${postId}`);
+          commentArea.classList.toggle('hidden');
+        }
+        // 发布评论（支持图片）
+        if (e.target.closest('.comment-form')) {
+          e.preventDefault();
+          const form = e.target.closest('.comment-form');
+          const postId = Number(form.dataset.postId);
+          const content = form.querySelector('textarea').value.trim();
+          if (!content) {
+            alert('评论内容不能为空！');
+            return;
+          }
+          const images = commentImageMap.get(postId);
+          await createComment(postId, content, images);
+        }
+        // 评论图片选择
+        if (e.target.closest('.comment-image-input')) {
+          const input = e.target.closest('.comment-image-input');
+          const postId = Number(input.dataset.postId);
+          const previewContainer = document.getElementById(`commentPreview-${postId}`);
+          const images = previewImages(input.files, previewContainer);
+          commentImageMap.set(postId, images || []);
+        }
+        // 移除评论预览图片
+        if (e.target.closest('.image-preview-remove')) {
+          const btn = e.target.closest('.image-preview-remove');
+          const index = Number(btn.dataset.index);
+          const postId = Number(btn.closest('.comment-container').id.replace('commentArea-', ''));
+          const previewContainer = document.getElementById(`commentPreview-${postId}`);
+          removePreviewImage(previewContainer, postId)(index);
+        }
+        // 删除帖子
+        if (e.target.closest('.delete-post-btn')) {
+          const btn = e.target.closest('.delete-post-btn');
+          const postId = Number(btn.dataset.postId);
+          await deletePost(postId);
+        }
+        // 删除评论
+        if (e.target.closest('.delete-comment-btn')) {
+          const btn = e.target.closest('.delete-comment-btn');
+          const postId = Number(btn.dataset.postId);
+          const commentId = Number(btn.dataset.commentId);
+          await deleteComment(postId, commentId);
+        }
+      });
+
+      // 5. 登出按钮
+      logoutBtn.addEventListener('click', async () => {
+        if (confirm('确定要登出吗？')) {
+          await logout();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

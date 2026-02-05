@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VTCRP 论坛 - 管理员面板</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 全局基础样式 */
+    body { 
+      background: #1a1a1a; 
+      color: #fff; 
+      min-height: 100vh; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    .card { 
+      background: #242424; 
+      border-radius: 12px; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.3); 
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+    }
+    /* 【Twitter新增】核心样式 - 圆形圆角、淡色边框、hover交互 */
+    .twitter-round { border-radius: 9999px; } /* Twitter标志性圆形圆角 */
+    .twitter-bg-hover:hover { background: rgba(255,255,255,0.02); }
+    /* 【Twitter新增】蓝标样式（贴近官方） */
+    .verified-badge {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #1d9bf0;
+      color: #fff;
+      font-size: 10px;
+      line-height: 16px;
+      text-align: center;
+      margin-left: 4px;
+      font-weight: 500;
+      vertical-align: middle;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .verified-badge.mini {
+      width: 14px;
+      height: 14px;
+      font-size: 9px;
+      line-height: 14px;
+      margin-left: 2px;
+    }
+    /* 【Twitter新增】@用户名样式（灰色、小写，贴近Twitter） */
+    .at-username {
+      color: #8899a6;
+      font-size: 0.8rem;
+      margin-left: 6px;
+    }
+    /* 【Twitter新增】搜索框样式（带搜索图标、圆形圆角） */
+    .search-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .search-input {
+      flex: 1;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 9999px;
+      padding: 10px 16px;
+      color: #fff;
+      font-size: 0.9rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238899a6' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a.998.998 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 12px center;
+      padding-left: 36px;
+    }
+    .search-input:focus {
+      outline: 2px solid #1d9bf0;
+      border-color: transparent;
+      background-color: #383838;
+    }
+    .search-btn {
+      padding: 0 16px;
+      background: #1d9bf0;
+      border: none;
+      border-radius: 9999px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-weight: 500;
+    }
+    .search-btn:hover {
+      background: #1a8cd8;
+    }
+    /* 【Twitter新增】操作按钮样式（分色、hover背景） */
+    .twitter-btn {
+      padding: 4px 12px;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .twitter-btn.verify {
+      background: rgba(29, 155, 240, 0.1);
+      color: #1d9bf0;
+    }
+    .twitter-btn.verify:hover {
+      background: rgba(29, 155, 240, 0.2);
+    }
+    .twitter-btn.admin {
+      background: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+    }
+    .twitter-btn.admin:hover {
+      background: rgba(139, 92, 246, 0.2);
+    }
+    .twitter-btn.delete {
+      background: rgba(224, 36, 94, 0.1);
+      color: #e0245e;
+    }
+    .twitter-btn.delete:hover {
+      background: rgba(224, 36, 94, 0.2);
+    }
+    /* 标签样式 */
+    .tag-item {
+      background: #1d9bf0/20;
+      color: #1d9bf0;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+      display: inline-block;
+    }
+    /* 空/加载提示 */
+    .empty-tip, .loading-tip {
+      text-align: center;
+      color: #9ca3af;
+      padding: 2rem 0;
+      font-size: 0.95rem;
+    }
+    .loading-tip { display: none; }
+    /* 顶部导航 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #333;
+    }
+    .header-title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-title span {
+      font-size: 0.9rem;
+      color: #8899a6;
+      font-weight: normal;
+    }
+    /* 标签页 */
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.5rem;
+    }
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      color: #8899a6;
+      font-weight: 500;
+      transition: color 0.2s, border-bottom 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      color: #1d9bf0;
+      border-bottom: 2px solid #1d9bf0;
+    }
+    .tab:hover:not(.active) {
+      color: #fff;
+      border-bottom: 2px solid #444;
+    }
+    /* 帖子卡片（Twitter推文风格） */
+    .post-card {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      transition: background 0.1s;
+    }
+    .post-card:hover { background: rgba(255,255,255,0.02); }
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+      .search-group { flex-direction: column; }
+      .tabs { overflow-x: auto; padding-bottom: 0.5rem; }
+      .header-title { font-size: 1.5rem; }
+      .twitter-btn { padding: 3px 8px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-6xl mx-auto">
+    <!-- 顶部导航 -->
+    <header class="header">
+      <div class="header-title">
+        VTCRP 论坛 <span>- 管理员面板</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span id="adminName" class="text-sm"></span>
+        <button id="logoutBtn" class="twitter-btn delete">登出</button>
+        <a href="/index.html" class="twitter-btn" style="background: #333; color: #fff;">返回主页</a>
+      </div>
+    </header>
+
+    <!-- 无权限提示 -->
+    <div id="noAdminTip" class="card p-6 text-center text-red-400 hidden">
+      <h2 class="text-xl font-bold mb-2">无管理员权限</h2>
+      <p>你没有权限访问管理员面板，请使用管理员账号登录！</p>
+      <a href="/login.html" class="mt-4 inline-block twitter-btn" style="background: #1d9bf0; color: #fff;">返回登录</a>
+    </div>
+
+    <!-- 管理员主体面板 -->
+    <div id="adminPanel" class="hidden">
+      <!-- 标签页切换 -->
+      <div class="tabs">
+        <div class="tab active" data-tab="user-tab">用户管理</div>
+        <div class="tab" data-tab="post-tab">帖子管理</div>
+      </div>
+
+      <!-- 1. 用户管理面板 -->
+      <div id="user-tab" class="tab-content">
+        <div class="card">
+          <h2 class="text-xl font-bold mb-4">用户管理</h2>
+          <!-- Twitter风格搜索框 -->
+          <div class="search-group">
+            <input type="text" id="userSearchInput" class="search-input" placeholder="搜索用户名、@用户名...">
+            <button id="userSearchBtn" class="search-btn">搜索</button>
+          </div>
+          <!-- 加载提示 -->
+          <div id="usersLoading" class="loading-tip">加载中，请稍候...</div>
+          <!-- 用户列表 -->
+          <div id="usersContainer" class="space-y-6">
+            <div class="empty-tip" id="usersEmptyTip">暂无用户数据</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 帖子管理面板 -->
+      <div id="post-tab" class="tab-content hidden">
+        <div class="card">
+          <h2 class="text-xl font-bold mb-4">帖子管理</h2>
+          <!-- Twitter风格搜索框 -->
+          <div class="search-group">
+            <input type="text" id="postSearchInput" class="search-input" placeholder="搜索帖子内容、用户名...">
+            <button id="postSearchBtn" class="search-btn">搜索</button>
+          </div>
+          <!-- 加载提示 -->
+          <div id="postsLoading" class="loading-tip">加载中，请稍候...</div>
+          <!-- 帖子列表 -->
+          <div id="postsContainer" class="space-y-6">
+            <div class="empty-tip" id="postsEmptyTip">暂无帖子数据</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 全局变量
+    const adminUser = JSON.parse(localStorage.getItem('vtcrp_user')) || null;
+    // DOM元素
+    const noAdminTip = document.getElementById('noAdminTip');
+    const adminPanel = document.getElementById('adminPanel');
+    const adminName = document.getElementById('adminName');
+    const logoutBtn = document.getElementById('logoutBtn');
+    // 标签页
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    // 用户管理
+    const userSearchInput = document.getElementById('userSearchInput');
+    const userSearchBtn = document.getElementById('userSearchBtn');
+    const usersContainer = document.getElementById('usersContainer');
+    const usersEmptyTip = document.getElementById('usersEmptyTip');
+    const usersLoading = document.getElementById('usersLoading');
+    // 帖子管理
+    const postSearchInput = document.getElementById('postSearchInput');
+    const postSearchBtn = document.getElementById('postSearchBtn');
+    const postsContainer = document.getElementById('postsContainer');
+    const postsEmptyTip = document.getElementById('postsEmptyTip');
+    const postsLoading = document.getElementById('postsLoading');
+
+    // 防抖函数（优化搜索体验）
+    const debounce = (fn, delay = 300) => {
+      let timer = null;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    };
+
+    // 页面初始化
+    window.onload = async () => {
+      // 校验管理员权限
+      const isAdmin = await checkAdminPermission();
+      if (!isAdmin) {
+        noAdminTip.classList.remove('hidden');
+        adminPanel.classList.add('hidden');
+        return;
+      }
+      // 展示管理员信息
+      adminName.textContent = `@${adminUser.username.toLowerCase()}`;
+      adminPanel.classList.remove('hidden');
+      // 加载初始数据
+      await loadUsers();
+      await loadPosts();
+      // 绑定事件
+      bindEvents();
+    };
+
+    // 校验管理员权限
+    async function checkAdminPermission() {
+      if (!adminUser) {
+        alert('请先登录！');
+        window.location.href = '/login.html';
+        return false;
+      }
+
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const result = await res.json();
+        if (!result.success) {
+          alert(result.msg || '无管理员权限！');
+          return false;
+        }
+        return true;
+      } catch (err) {
+        alert('网络错误，请重试！');
+        return false;
+      }
+    }
+
+    // 加载用户列表（支持搜索）
+    async function loadUsers(keyword = '') {
+      usersLoading.style.display = 'block';
+      usersEmptyTip.style.display = 'none';
+      usersContainer.innerHTML = '';
+
+      try {
+        let res, result;
+        if (keyword.trim()) {
+          res = await fetch(`/api/admin/users/search?keyword=${encodeURIComponent(keyword.trim())}`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+        } else {
+          res = await fetch('/api/admin/users', {
+            method: 'GET',
+            credentials: 'include'
+          });
+        }
+
+        result = await res.json();
+        usersLoading.style.display = 'none';
+
+        if (!result.success) {
+          usersEmptyTip.textContent = result.msg || '加载用户失败，请重试！';
+          usersEmptyTip.style.display = 'block';
+          return;
+        }
+
+        const users = result.data;
+        if (users.length === 0) {
+          usersEmptyTip.textContent = keyword.trim() ? '暂无匹配的用户' : '暂无用户数据';
+          usersEmptyTip.style.display = 'block';
+          return;
+        }
+
+        // 渲染用户列表（新增@用户名、Twitter风格按钮）
+        users.forEach(user => {
+          const userEl = document.createElement('div');
+          userEl.className = 'p-4 bg-gray-800/50 rounded-lg twitter-bg-hover';
+          userEl.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="font-bold flex items-center">
+                  ${user.username}
+                  ${user.isVerified ? '<span class="verified-badge">✓</span>' : ''}
+                  <span class="at-username">@${user.username.toLowerCase()}</span>
+                  ${user.isAdmin ? '<span class="ml-2 px-2 py-0.5 bg-yellow-900/30 text-yellow-400 text-xs rounded twitter-round">管理员</span>' : ''}
+                </h3>
+                <p class="text-sm text-gray-400">用户ID：${user.id}</p>
+              </div>
+              <img src="${user.avatar || '/assets/avatars/default.png'}" alt="${user.username}" class="w-10 h-10 rounded-full object-cover">
+            </div>
+            <!-- 标签列表 -->
+            <div class="flex flex-wrap mb-4">
+              <span class="text-sm text-gray-400 mr-2">标签：</span>
+              ${user.tags && user.tags.length > 0 
+                ? user.tags.map(tag => `<span class="tag-item">${tag}</span>`).join('') 
+                : '<span class="text-sm text-gray-500">无</span>'
+              }
+            </div>
+            <!-- Twitter风格操作按钮 -->
+            <div class="flex gap-2 flex-wrap">
+              <button class="verify-btn twitter-btn verify" data-user-id="${user.id}" data-is-verified="${user.isVerified}">
+                ${user.isVerified ? '取消蓝标' : '授予蓝标'}
+              </button>
+              <button class="admin-btn twitter-btn admin" data-user-id="${user.id}" data-is-admin="${user.isAdmin}">
+                ${user.isAdmin ? '移除管理员' : '设为管理员'}
+              </button>
+              <div class="flex gap-2">
+                <input type="text" class="tag-input search-input text-sm py-1 px-2 h-8" placeholder="输入标签" data-user-id="${user.id}">
+                <button class="add-tag-btn twitter-btn" style="background: #1d9bf0; color: #fff;" data-user-id="${user.id}">添加标签</button>
+                <button class="remove-tag-btn twitter-btn" style="background: #666; color: #fff;" data-user-id="${user.id}">移除标签</button>
+              </div>
+            </div>
+          `;
+          usersContainer.appendChild(userEl);
+        });
+      } catch (err) {
+        usersLoading.style.display = 'none';
+        usersEmptyTip.textContent = '网络异常，加载失败！';
+        usersEmptyTip.style.display = 'block';
+      }
+    }
+
+    // 加载帖子列表（支持搜索）
+    async function loadPosts(keyword = '') {
+      postsLoading.style.display = 'block';
+      postsEmptyTip.style.display = 'none';
+      postsContainer.innerHTML = '';
+
+      try {
+        let res, result;
+        if (keyword.trim()) {
+          res = await fetch(`/api/admin/posts/search?keyword=${encodeURIComponent(keyword.trim())}`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+        } else {
+          res = await fetch('/api/admin/posts', {
+            method: 'GET',
+            credentials: 'include'
+          });
+        }
+
+        result = await res.json();
+        postsLoading.style.display = 'none';
+
+        if (!result.success) {
+          postsEmptyTip.textContent = result.msg || '加载帖子失败，请重试！';
+          postsEmptyTip.style.display = 'block';
+          return;
+        }
+
+        const posts = result.data;
+        if (posts.length === 0) {
+          postsEmptyTip.textContent = keyword.trim() ? '暂无匹配的帖子' : '暂无帖子数据';
+          postsEmptyTip.style.display = 'block';
+          return;
+        }
+
+        // 渲染帖子列表（Twitter推文风格）
+        posts.forEach(post => {
+          const postEl = document.createElement('div');
+          postEl.className = 'post-card';
+          postEl.innerHTML = `
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="font-bold flex items-center">
+                  ${post.username}
+                  ${post.userIsVerified ? '<span class="verified-badge">✓</span>' : ''}
+                  <span class="at-username">@${post.username.toLowerCase()}</span>
+                </h3>
+                <p class="text-sm text-gray-400">帖子ID：${post.id} | ${formatTime(post.createdAt)}</p>
+              </div>
+              <button class="delete-post-btn twitter-btn delete" data-post-id="${post.id}">删除帖子</button>
+            </div>
+            <div class="text-gray-200 mb-3">${post.content}</div>
+            <div class="text-sm text-gray-400 mb-3">
+              点赞数：${post.likes} | 评论数：${post.comments.length} | 转发数：${post.retweets || 0}
+            </div>
+            <!-- 评论列表 -->
+            ${post.comments.length > 0 ? `
+              <div class="mt-3 border-t border-gray-700 pt-3">
+                <h4 class="text-sm font-medium mb-2">评论列表：</h4>
+                <div class="space-y-2">
+                  ${post.comments.map(comment => `
+                    <div class="p-2 bg-gray-700/50 rounded twitter-bg-hover">
+                      <div class="flex justify-between">
+                        <span class="text-sm font-medium flex items-center">
+                          ${comment.username}
+                          ${comment.userIsVerified ? '<span class="verified-badge mini">✓</span>' : ''}
+                          <span class="at-username">@${comment.username.toLowerCase()}</span>
+                        </span>
+                        <button class="delete-comment-btn twitter-btn delete text-xs" data-post-id="${post.id}" data-comment-id="${comment.id}">删除</button>
+                      </div>
+                      <p class="text-sm text-gray-300 mt-1">${comment.content}</p>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          `;
+          postsContainer.appendChild(postEl);
+        });
+      } catch (err) {
+        postsLoading.style.display = 'none';
+        postsEmptyTip.textContent = '网络异常，加载失败！';
+        postsEmptyTip.style.display = 'block';
+      }
+    }
+
+    // 切换蓝标状态
+    async function toggleVerify(userId, isVerified) {
+      try {
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ userId, isVerified: !isVerified })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.msg);
+          await loadUsers(userSearchInput.value.trim());
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('操作失败，请重试！');
+      }
+    }
+
+    // 切换管理员状态
+    async function toggleAdmin(userId, isAdmin) {
+      try {
+        const res = await fetch('/api/admin/setAdmin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ userId, isAdmin: !isAdmin })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.msg);
+          await loadUsers(userSearchInput.value.trim());
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('操作失败，请重试！');
+      }
+    }
+
+    // 添加标签
+    async function addTag(userId, tag) {
+      tag = tag.trim();
+      if (!tag) {
+        alert('标签不能为空！');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/addTag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ userId, tag })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.msg);
+          await loadUsers(userSearchInput.value.trim());
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('操作失败，请重试！');
+      }
+    }
+
+    // 移除标签
+    async function removeTag(userId, tag) {
+      tag = tag.trim();
+      if (!tag) {
+        alert('标签不能为空！');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/removeTag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ userId, tag })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.msg);
+          await loadUsers(userSearchInput.value.trim());
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('操作失败，请重试！');
+      }
+    }
+
+    // 删除帖子
+    async function deletePost(postId) {
+      if (!confirm('确定要删除该帖子吗？此操作不可恢复！')) return;
+
+      try {
+        const res = await fetch('/api/admin/post/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.msg);
+          await loadPosts(postSearchInput.value.trim());
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('删除失败，请重试！');
+      }
+    }
+
+    // 删除评论
+    async function deleteComment(postId, commentId) {
+      if (!confirm('确定要删除该评论吗？此操作不可恢复！')) return;
+
+      try {
+        const res = await fetch('/api/admin/comment/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ postId, commentId })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.msg);
+          await loadPosts(postSearchInput.value.trim());
+        } else {
+          alert(result.msg);
+        }
+      } catch (err) {
+        alert('删除失败，请重试！');
+      }
+    }
+
+    // 格式化时间（Twitter风格）
+    function formatTime(timeStr) {
+      const now = new Date();
+      const postTime = new Date(timeStr);
+      const diff = now - postTime;
+
+      const minute = 60 * 1000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+
+      if (diff < minute) return '刚刚';
+      if (diff < hour) return `${Math.floor(diff / minute)}分钟前`;
+      if (diff < day) return `${Math.floor(diff / hour)}小时前`;
+      return postTime.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    }
+
+    // 登出
+    async function logout() {
+      try {
+        await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        localStorage.removeItem('vtcrp_user');
+        window.location.href = '/login.html';
+        alert('登出成功！');
+      } catch (err) {
+        localStorage.removeItem('vtcrp_user');
+        window.location.href = '/login.html';
+        alert('登出成功！');
+      }
+    }
+
+    // 绑定所有事件
+    function bindEvents() {
+      // 1. 标签页切换
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // 移除所有active
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(c => c.classList.add('hidden'));
+          // 添加当前active
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab).classList.remove('hidden');
+        });
+      });
+
+      // 2. 用户搜索
+      const handleUserSearch = debounce(async () => {
+        const keyword = userSearchInput.value.trim();
+        await loadUsers(keyword);
+      });
+      userSearchBtn.addEventListener('click', handleUserSearch);
+      userSearchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') handleUserSearch();
+      });
+
+      // 3. 帖子搜索
+      const handlePostSearch = debounce(async () => {
+        const keyword = postSearchInput.value.trim();
+        await loadPosts(keyword);
+      });
+      postSearchBtn.addEventListener('click', handlePostSearch);
+      postSearchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') handlePostSearch();
+      });
+
+      // 4. 用户操作（蓝标/管理员/标签）- 事件委托
+      usersContainer.addEventListener('click', async (e) => {
+        // 蓝标
+        if (e.target.closest('.verify-btn')) {
+          const btn = e.target.closest('.verify-btn');
+          const userId = Number(btn.dataset.userId);
+          const isVerified = btn.dataset.isVerified === 'true';
+          await toggleVerify(userId, isVerified);
+        }
+
+        // 管理员
+        if (e.target.closest('.admin-btn')) {
+          const btn = e.target.closest('.admin-btn');
+          const userId = Number(btn.dataset.userId);
+          const isAdmin = btn.dataset.isAdmin === 'true';
+          await toggleAdmin(userId, isAdmin);
+        }
+
+        // 添加标签
+        if (e.target.closest('.add-tag-btn')) {
+          const btn = e.target.closest('.add-tag-btn');
+          const userId = Number(btn.dataset.userId);
+          const input = btn.parentElement.querySelector('.tag-input');
+          const tag = input.value.trim();
+          await addTag(userId, tag);
+          input.value = '';
+        }
+
+        // 移除标签
+        if (e.target.closest('.remove-tag-btn')) {
+          const btn = e.target.closest('.remove-tag-btn');
+          const userId = Number(btn.dataset.userId);
+          const input = btn.parentElement.querySelector('.tag-input');
+          const tag = input.value.trim();
+          await removeTag(userId, tag);
+          input.value = '';
+        }
+      });
+
+      // 5. 帖子操作（删除帖子/评论）- 事件委托
+      postsContainer.addEventListener('click', async (e) => {
+        // 删除帖子
+        if (e.target.closest('.delete-post-btn')) {
+          const btn = e.target.closest('.delete-post-btn');
+          const postId = Number(btn.dataset.postId);
+          await deletePost(postId);
+        }
+
+        // 删除评论
+        if (e.target.closest('.delete-comment-btn')) {
+          const btn = e.target.closest('.delete-comment-btn');
+          const postId = Number(btn.dataset.postId);
+          const commentId = Number(btn.dataset.commentId);
+          await deleteComment(postId, commentId);
+        }
+      });
+
+      // 6. 登出按钮
+      logoutBtn.addEventListener('click', async () => {
+        if (confirm('确定要登出管理员面板吗？')) {
+          await logout();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
