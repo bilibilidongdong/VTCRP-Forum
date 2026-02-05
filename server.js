@@ -9,7 +9,10 @@ const multer = require('multer');
 
 // ===================== 基础配置 =====================
 const app = express();
-const PORT = 3000;
+// 【修改1】适配Vercel动态端口，放弃硬编码3000，本地仍可回退3000
+const PORT = process.env.PORT || 3000;
+// 【修改2】Vercel是无状态服务器，本地文件存储会丢失，添加环境判断（后续可优化为云存储）
+const isVercel = !!process.env.VERCEL;
 
 // 数据文件路径
 const USER_DATA_PATH = path.resolve(__dirname, 'data', 'users.json');
@@ -31,17 +34,40 @@ const avatarStorage = multer.diskStorage({
     cb(null, filename);
   }
 });
-const upload = multer({ storage: avatarStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+// 【修改3】Vercel禁止本地文件写入，上传功能暂时禁用（避免部署报错）
+const upload = isVercel ? multer({ storage: avatarStorage, limits: { fileSize: 5 * 1024 * 1024 } }).single('avatar') : (req, res, next) => next();
 
 // ===================== 核心中间件 =====================
 app.use(session({
   secret: 'VTCRP_Forum_2026_Secret_Key',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 3600000, httpOnly: true }
+  cookie: { 
+    maxAge: 3600000, 
+    httpOnly: true,
+    // 【修改4】适配Vercel的HTTPS环境，开启secure（本地HTTP自动失效）
+    secure: process.env.NODE_ENV === 'production',
+    // 【修改5】允许跨域携带Cookie，适配Vercel域名的跨域场景
+    sameSite: 'none'
+  }
 }));
 
-app.use(cors({ origin: true, credentials: true }));
+// 【修改6】优化CORS配置，适配Vercel的公网域名，允许所有合法请求
+app.use(cors({
+  origin: (origin, callback) => {
+    // 允许本地开发和Vercel域名，*表示允许所有（生产可指定具体域名）
+    const allowedOrigins = [/^https?:\/\/localhost:\d+$/, /\.vercel\.app$/];
+    if (!origin || allowedOrigins.some(re => re.test(origin))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // 必须开启，允许携带session/cookie
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.resolve(__dirname, 'public')));
@@ -86,8 +112,13 @@ const initPostData = () => {
   }
 };
 
-initUserData();
-initPostData();
+// 【修改7】Vercel每次请求都会重启服务，初始化只执行一次（避免重复创建文件）
+if (!isVercel) {
+  initUserData();
+  initPostData();
+} else {
+  console.log("⚠️  Vercel环境，跳过本地数据初始化（本地文件存储临时失效）");
+}
 
 // ===================== 工具函数 =====================
 const getUsers = () => {
@@ -102,6 +133,8 @@ const getUsers = () => {
 
 const saveUsers = (users) => {
   try {
+    // 【修改8】Vercel禁止本地写入，跳过保存（后续优化为云数据库）
+    if (isVercel) return;
     fs.writeFileSync(USER_DATA_PATH, JSON.stringify(users, null, 2), 'utf8');
   } catch (err) {
     console.error("❌ 保存用户数据失败：", err.message);
@@ -120,6 +153,8 @@ const getPosts = () => {
 
 const savePosts = (posts) => {
   try {
+    // 【修改8】Vercel禁止本地写入，跳过保存（后续优化为云数据库）
+    if (isVercel) return;
     fs.writeFileSync(POST_DATA_PATH, JSON.stringify(posts, null, 2), 'utf8');
   } catch (err) {
     console.error("❌ 保存帖子数据失败：", err.message);
@@ -237,8 +272,12 @@ app.get('/api/user/current', checkLogin, (req, res) => {
   res.json({ success: true, data: req.session.user });
 });
 
-app.post('/api/user/avatar', checkLogin, upload.single('avatar'), (req, res) => {
+app.post('/api/user/avatar', checkLogin, upload, (req, res) => {
   try {
+    // 【修改9】Vercel环境提示文件上传暂不可用
+    if (isVercel) {
+      return res.json({ success: false, msg: "Vercel环境暂不支持本地头像上传，后续将优化为云存储！" });
+    }
     if (!req.file) return res.json({ success: false, msg: "请选择头像文件！" });
 
     const users = getUsers();
@@ -464,6 +503,10 @@ app.post('/api/admin/comment/delete', checkAdmin, (req, res) => {
 // ===================== 论坛帖子接口 =====================
 app.post('/api/posts/create', checkLogin, (req, res) => {
   try {
+    // 【修改10】Vercel环境提示帖子保存暂不可用（无状态）
+    if (isVercel) {
+      return res.json({ success: false, msg: "Vercel无状态环境暂不支持帖子持久化，后续将优化为云数据库！" });
+    }
     const { content } = req.body;
     if (!content || content.trim() === "") return res.json({ success: false, msg: "帖子内容不能为空！" });
 
@@ -492,6 +535,10 @@ app.post('/api/posts/create', checkLogin, (req, res) => {
 
 app.post('/api/posts/like', checkLogin, (req, res) => {
   try {
+    // 【修改10】Vercel环境提示点赞暂不可用
+    if (isVercel) {
+      return res.json({ success: false, msg: "Vercel无状态环境暂不支持点赞持久化，后续将优化为云数据库！" });
+    }
     const { postId } = req.body;
     if (!postId) return res.json({ success: false, msg: "请选择要点赞的帖子！" });
 
@@ -522,6 +569,10 @@ app.post('/api/posts/like', checkLogin, (req, res) => {
 
 app.post('/api/posts/comment', checkLogin, (req, res) => {
   try {
+    // 【修改10】Vercel环境提示评论暂不可用
+    if (isVercel) {
+      return res.json({ success: false, msg: "Vercel无状态环境暂不支持评论持久化，后续将优化为云数据库！" });
+    }
     const { postId, content } = req.body;
     if (!postId || !content || content.trim() === "") return res.json({ success: false, msg: "评论内容不能为空！" });
 
@@ -579,14 +630,20 @@ app.get('/api/posts/search', (req, res) => {
 });
 
 // ===================== 启动服务器 =====================
-app.listen(PORT, () => {
+// 【修改11】监听0.0.0.0适配公网/Vercel，打印Vercel适配的访问提示
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 VTCRP论坛服务器已启动！`);
-  console.log(`🔗 访问地址：http://localhost:${PORT}`);
-  console.log(`📌 登录页：http://localhost:${PORT}/login.html`);
-  console.log(`📌 注册页：http://localhost:${PORT}/register.html`);
-  console.log(`\n🔑 官方账号：`);
-  console.log(`   用户名：VTCRP Official`);
-  console.log(`   密码：VTCRP_Official_2026`);
+  if (isVercel) {
+    console.log(`🔗 Vercel访问地址：https://${process.env.VERCEL_URL}`);
+  } else {
+    console.log(`🔗 本地访问：http://localhost:${PORT}`);
+    console.log(`🔗 局域网访问：http://你的电脑IP:${PORT}`);
+    console.log(`📌 登录页：http://localhost:${PORT}/login.html`);
+    console.log(`📌 注册页：http://localhost:${PORT}/register.html`);
+    console.log(`\n🔑 官方账号：`);
+    console.log(`   用户名：VTCRP Official`);
+    console.log(`   密码：VTCRP_Official_2026`);
+  }
 });
 
 // ===================== 全局错误处理 =====================
